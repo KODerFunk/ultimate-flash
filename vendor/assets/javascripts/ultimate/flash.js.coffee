@@ -31,6 +31,11 @@ class UltimateFlashWidget
       showAjaxErrors: true
       showAjaxSuccesses: true
       hideOnClick: true
+      removeOnHide: true
+      forceAddDotsAfterLastWord: false
+      forceRemoveDotsAfterLastWord: false
+      regExpLastWordWithoutDot: /[\wа-яёА-ЯЁ]{3,}$/
+      regExpLastWordWithDot: /([\wа-яёА-ЯЁ]{3,})\.$/
       locale: 'en'
 
   jContainer: null
@@ -42,10 +47,15 @@ class UltimateFlashWidget
     @settings = $.extend {}, @constructor.defaults.options, @constructor.defaults.locales[_locale], options
     @jContainer.data @constructor.defaults.constants.widgetDataKey, @
     _self = @
-    @jContainer.delegate '.flash:not(:animated)', 'click', ->
+    # delegate event for hide on click
+    @jContainer.delegate '.flash:not(:animated)', 'click.ultimate_flash_close', ->
       _self._hide $ @ if _self.settings.hideOnClick
       false
-    @jFlashes().each -> _self._setTimeout $ @
+    # init flashes from server
+    @jFlashes().each ->
+      jFlash = $ @
+      jFlash.html _self._prepareText jFlash.html()
+      _self._setTimeout jFlash
     # binding hook ajaxError handler
     @jContainer.ajaxError =>
       @ajaxError arguments if @settings.showAjaxErrors
@@ -57,9 +67,17 @@ class UltimateFlashWidget
     _jFlashes = @jContainer.find '.flash'
     if filterSelector then _jFlashes.filter filterSelector else _jFlashes
 
+  _prepareText: (text) ->
+    text = strTrim text
+    # Add dot after last word (if word has minimum 3 characters)
+    text += '.' if @settings.forceAddDotsAfterLastWord and @settings.regExpLastWordWithoutDot.test text
+    text = text.replace @settings.regExpLastWordWithDot, '$1' if @settings.forceRemoveDotsAfterLastWord
+    text
+
   _hide: (jFlash) ->
     clearTimeout jFlash.data 'timeout_id'
-    jFlash.slideUp @settings.slideTime, -> $(@).remove()
+    _self = @
+    jFlash.slideUp @settings.slideTime, -> $(@).remove() if _self.settings.removeOnHide
 
   _setTimeout: (jFlash) ->
     timeoutId = false
@@ -82,9 +100,7 @@ class UltimateFlashWidget
 
   show: (type, text) ->
     return false if $.isEmptyString text
-    # Add dot after last word (if word has minimum 3 characters)
-    text += '.' if /[\wа-яёА-ЯЁ]{3,}$/.test text
-    jFlash = $ "<div class=\"flash #{type}\" style=\"display: none;\">#{text}</div>"
+    jFlash = $ "<div class=\"flash #{type}\" style=\"display: none;\">#{@_prepareText text}</div>"
     jFlash.appendTo(@jContainer).slideDown @settings.slideTime
     @_setTimeout jFlash
     jFlash
