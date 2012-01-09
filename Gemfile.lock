@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ultimate-flash (0.4.5.alpha)
+    ultimate-flash (0.4.7.alpha)
       coffee-script (~> 2.2.0)
 
 GEM

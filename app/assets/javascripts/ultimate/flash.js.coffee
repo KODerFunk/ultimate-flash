@@ -1,5 +1,5 @@
 ###
- * Ultimate Flash 0.4.5 alpha - Ruby on Rails oriented jQuery plugin
+ * Ultimate Flash 0.4.7.alpha - Ruby on Rails oriented jQuery plugin
  *
  * Copyright 2011-2012 Karpunin Dmitry (KODer) / Evrone.com
  *
@@ -9,7 +9,9 @@
  *
 ###
 
-# TODO architecture of wiggets in ultimate.widgets.js.coffee
+# TODO I18n.js and I18n-lite.js support
+# TODO architecture of wiggets in ultimate/widgets.js.coffee
+
 class UltimateFlashWidget
 
   @defaults:
