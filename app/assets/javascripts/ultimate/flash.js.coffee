@@ -9,8 +9,9 @@
  *
 ###
 
-# TODO I18n.js and I18n-lite.js support
 # TODO architecture of wiggets in ultimate/widgets.js.coffee
+# TODO customizable show() and hide()
+# TODO improve English
 
 class UltimateFlashWidget
 
@@ -30,11 +31,12 @@ class UltimateFlashWidget
       slideTime: 200
       showTime: 3600
       showTimePerChar: 30
-      showAjaxErrors: true
-      showAjaxSuccesses: true
-      showFormError: true  # can be function (parsedJSON)
-      hideOnClick: true
-      removeOnHide: true
+      showAjaxErrors: true                  # catch global jQuery.ajaxErrors(), try detect message and show it
+      showAjaxSuccesses: true               # catch global jQuery.ajaxSuccessess(), try detect message and show it
+      detectFormErrors: true                # can be function (parsedJSON)
+      detectPlainTextMaxLength: 200         # if response has plain text and its length fits, show it
+      hideOnClick: true                     # click on notice fire hide()
+      removeOnHide: true                    # remove notice DOM-element on hide
       forceAddDotsAfterLastWord: false
       forceRemoveDotsAfterLastWord: false
       regExpLastWordWithoutDot: /[\wа-яёА-ЯЁ]{3,}$/
@@ -45,6 +47,12 @@ class UltimateFlashWidget
   settings: {}
 
   constructor: (@jContainer, options = {}) ->
+    if I18n? and I18n.locale and I18n.t
+      options['locale'] ||= I18n.locale
+      if _localesFromI18n = I18n.t 'ultimate_flash'
+        _defaultLocales = @constructor.defaults.locales[I18n.locale]
+        for key, value of _localesFromI18n
+          _defaultLocales[_.camelize key] = value
     _locale = options['locale'] or @constructor.defaults.options['locale']
     $.error "Locale [#{_locale}] not exists in UltimateFlash default locales."  unless @constructor.defaults.locales[_locale]
     @settings = $.extend {}, @constructor.defaults.options, @constructor.defaults.locales[_locale], options
@@ -124,18 +132,29 @@ class UltimateFlashWidget
    * @return {Boolean}                    статус выполнения показа сообщения
   ###
   ajaxSuccess: (successArgs) ->
-    successArgs = args successArgs
-    successArgs.shift()  if successArgs[0].target # remove event
+    # detect event as first element
+    if successArgs[0].target
+      # convert arguments to Array
+      successArgs = args successArgs
+      # remove event
+      successArgs.shift()
+    # arrange arguments
     if $.isString successArgs[0]
-      [data, textStatus, jqXHR] = successArgs
+      # from jQuery.ajax().success()
+      [data, _textStatus, jqXHR] = successArgs
     else
-      [jqXHR, ajaxSettings, data] = successArgs
+      #from. jQuery.ajaxSuccess()
+      [jqXHR, _ajaxSettings, data] = successArgs
     # prevent recall
     return false  if jqXHR.breakFlash
     jqXHR.breakFlash = true
+    # detect notice
     if $.isString data
-      return @notice data  if data.length and not $.isHTML data
+      # catch plain text message
+      data = $.trim data
+      return @notice data  if data.length <= @settings.detectPlainTextMaxLength and not $.isHTML data
     else if $.isPlainObject data
+      # catch json data with flash-notice
       return @auto data['flash']  if data['flash']
     false
 
@@ -162,14 +181,21 @@ class UltimateFlashWidget
       jqXHR.breakFlash = true
       if jqXHR.responseText
         try
+          # try parse respose as json
           if parsedJSON = $.parseJSON jqXHR.responseText
+            # catch 'flash' object and call auto() method with autodetecting flash-notice type
             return @auto parsedJSON['flash']  if parsedJSON['flash']
+            # catch 'error' object and call alert() method
             return @alert parsedJSON['error']  if parsedJSON['error']
-            if @settings.showFormError and _.isBoolean @settings.showFormError
+            # may be parsedJSON is form errors
+            if @settings.detectFormErrors is true
+              # show message about form with errors
               return @alert @settings.formFieldsError
-            else if _.isFunction @settings.showFormError
-              return @settings.showFormError.apply @, [parsedJSON]
+            else if _.isFunction @settings.detectFormErrors
+              # using showFormError as callback
+              return @settings.detectFormErrors.apply @, [parsedJSON]
             else
+              # nothing
               return false
         catch e
           # nop
@@ -179,7 +205,7 @@ class UltimateFlashWidget
           thrownError = raiseMatches[1]
         else
           # get short text message as error
-          thrownError = jqXHR.responseText  if jqXHR.responseText.length < 200
+          thrownError = jqXHR.responseText  if jqXHR.responseText.length <= @settings.detectPlainTextMaxLength
       else
         thrownError = @settings.defaultThrownError  if $.isString thrownError and not $.isEmptyString thrownError
       text += ': '  if text
