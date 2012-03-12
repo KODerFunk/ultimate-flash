@@ -15,7 +15,7 @@
 
 class UltimateFlashWidget
 
-  @defaults:
+  @defaults =
     constants:
       widgetDataKey: 'ultimate_flash'
     locales:
@@ -42,31 +42,38 @@ class UltimateFlashWidget
       regExpLastWordWithoutDot: /[\wа-яёА-ЯЁ]{3,}$/
       regExpLastWordWithDot: /([\wа-яёА-ЯЁ]{3,})\.$/
       locale: 'en'
+      translations: {}
 
   jContainer: null
   settings: {}
 
   constructor: (@jContainer, options = {}) ->
+    # if global compatible I18n
     if I18n? and I18n.locale and I18n.t
+      # can set locale
       options['locale'] ||= I18n.locale
+      # try read localized strings
       if _localesFromI18n = I18n.t 'ultimate_flash'
+        # pointing to default UF locales of language specified in I18n
         _defaultLocales = @constructor.defaults.locales[I18n.locale]
+        # fill it from I18n
         for key, value of _localesFromI18n
           _defaultLocales[_.camelize key] = value
     _locale = options['locale'] or @constructor.defaults.options['locale']
     $.error "Locale [#{_locale}] not exists in UltimateFlash default locales."  unless @constructor.defaults.locales[_locale]
-    @settings = $.extend {}, @constructor.defaults.options, @constructor.defaults.locales[_locale], options
+    @settings = $.extend true, {}, @constructor.defaults.options, translations: @constructor.defaults.locales[_locale], options
     @jContainer.data @constructor.defaults.constants.widgetDataKey, @
     _self = @
     # delegate event for hide on click
-    @jContainer.delegate '.flash:not(:animated)', 'click.ultimate_flash_close', ->
-      _self._hide $ @  if _self.settings.hideOnClick
-      false
+    @jContainer.on 'click.ultimate_flash_close', '.flash:not(:animated)', (event) =>
+      if @settings.hideOnClick
+        @_hide $ event.currentTarget
+        false
     # init flashes from server
-    @jFlashes().each ->
-      jFlash = $ @
-      jFlash.html _self._prepareText jFlash.html()
-      _self._setTimeout jFlash
+    @jFlashes().each (index, flash) =>
+      jFlash = $ flash
+      jFlash.html @_prepareText jFlash.html()
+      @_setTimeout jFlash
     # binding hook ajaxError handler
     @jContainer.ajaxError =>
       @ajaxError arguments  if @settings.showAjaxErrors
@@ -86,18 +93,16 @@ class UltimateFlashWidget
     text
 
   _hide: (jFlash) ->
-    clearTimeout jFlash.data 'timeout_id'
+    clearTimeout jFlash.data 'timeoutId'
     _self = @
     jFlash.slideUp @settings.slideTime, -> $(@).remove()  if _self.settings.removeOnHide
 
-  _setTimeout: (jFlash) ->
-    timeoutId = false
-    if @settings.showTime or @settings.showTimePerChar
-      timeoutId = setTimeout =>
+  _setTimeout: (jFlash, timeout = @settings.showTime + jFlash.text().length * @settings.showTimePerChar) ->
+    if timeout
+      jFlash.data 'timeoutId', setTimeout =>
+          jFlash.removeData 'timeoutId'
           @_hide jFlash
-        , @settings.showTime + jFlash.text().length * @settings.showTimePerChar
-      jFlash.data 'timeout_id', timeoutId
-    timeoutId
+        , timeout
 
   getSettings: ->
     @settings
@@ -139,17 +144,17 @@ class UltimateFlashWidget
       # remove event
       successArgs.shift()
     # arrange arguments
-    if $.isString successArgs[0]
+    if _.isString successArgs[0]
       # from jQuery.ajax().success()
       [data, _textStatus, jqXHR] = successArgs
     else
-      #from. jQuery.ajaxSuccess()
+      # from jQuery.ajaxSuccess()
       [jqXHR, _ajaxSettings, data] = successArgs
     # prevent recall
     return false  if jqXHR.breakFlash
     jqXHR.breakFlash = true
     # detect notice
-    if $.isString data
+    if _.isString data
       # catch plain text message
       data = $.trim data
       return @notice data  if data.length <= @settings.detectPlainTextMaxLength and not $.isHTML data
@@ -164,14 +169,14 @@ class UltimateFlashWidget
    * @return {Boolean}                     статус выполнения показа сообщения
   ###
   ajaxError: ->
-    text = @settings.defaultErrorText
+    text = @settings.translations.defaultErrorText
     errorArgs = []
     if arguments.length
       _next = arguments[0]
-      if $.isString _next
+      if _.isString _next
         text = _next
         _next = arguments[1]  if arguments.length > 1
-      errorArgs = _next  if not $.isString(_next) and _next.length
+      errorArgs = _next  if not _.isString(_next) and _next.length
     if errorArgs.length
       errorArgs = args errorArgs
       errorArgs.shift()  if errorArgs[0].target # remove event
@@ -190,7 +195,7 @@ class UltimateFlashWidget
             # may be parsedJSON is form errors
             if @settings.detectFormErrors is true
               # show message about form with errors
-              return @alert @settings.formFieldsError
+              return @alert @settings.translations.formFieldsError
             else if _.isFunction @settings.detectFormErrors
               # using showFormError as callback
               return @settings.detectFormErrors.apply @, [parsedJSON]
@@ -202,12 +207,17 @@ class UltimateFlashWidget
       if jqXHR.status >= 400 and jqXHR.responseText
         # try detect Rails raise message
         if raiseMatches = jqXHR.responseText.match /<\/h1>\n<pre>(.+?)<\/pre>/
+          cout "replace thrownError = '#{thrownError}' with raiseMatches[1] = '#{raiseMatches[1]}'"
           thrownError = raiseMatches[1]
         else
-          # get short text message as error
-          thrownError = jqXHR.responseText  if jqXHR.responseText.length <= @settings.detectPlainTextMaxLength
+          # try detect short text message as error
+          if jqXHR.responseText.length <= @settings.detectPlainTextMaxLength
+            cout "replace thrownError = '#{thrownError}' with jqXHR.responseText = '#{jqXHR.responseText}'"
+            thrownError = jqXHR.responseText
       else
-        thrownError = @settings.defaultThrownError  if $.isString thrownError and not $.isEmptyString thrownError
+        if _.isString thrownError and not $.isEmptyString thrownError
+          cout "replace thrownError = '#{thrownError}' with @settings.translations.defaultThrownError = '#{@settings.translations.defaultThrownError}'"
+          thrownError = @settings.translations.defaultThrownError
       text += ': '  if text
       text += "#{thrownError} [#{jqXHR.status}]"
     return @alert text
@@ -231,30 +241,42 @@ class UltimateFlashWidget
    * updateSettings  .ultimateFlash({Object} options)                       ~ {Object} settings
    * auto            .ultimateFlash('auto', {ArrayOrObject} obj)            ~ {Array} ajFlashes | {Boolean} false
    * ajaxSuccess     .ultimateFlash('ajaxSuccess'[, Arguments successArgs = []])
-   * ajaxError       .ultimateFlash('ajaxError'[, String text = settings.defaultErrorText][, Arguments errorArgs = []])
+   * ajaxError       .ultimateFlash('ajaxError'[, String text = settings.translations.defaultErrorText][, Arguments errorArgs = []])
   ###
   $.fn.ultimateFlash = ->
-    return @  unless @length
+    a = args arguments
+    argsLength = a.length
+    # Shall return the Widget, if have arguments and last argument of the call is a Boolean true.
+    _returnWidget =
+      if argsLength and _.isBoolean a[argsLength - 1]
+        argsLength--
+        a.pop()
+      else
+        false
+    unless @length
+      return if _returnWidget then undefined else @
+    # Get the first
     jContainer = @eq 0
+    # Try to get the Widget-object, controlling everything that happens in our magical container.
     widget = jContainer.data UltimateFlashWidget.defaults.constants.widgetDataKey
-    argsLength = arguments.length
-    _returnWidget = argsLength && arguments[argsLength - 1] == true
-    if widget and widget.jContainer[0] == jContainer[0]
-      a = args arguments
-      if argsLength and typeof a[0] == 'string'
+    if widget and widget.jContainer[0] is jContainer[0]
+      if argsLength and _.isString a[0]
         command = a.shift()
       else
         return widget  if _returnWidget
         return jContainer  unless argsLength
         command = 'updateSettings'
-      if $.isFunction widget[command]
+      if _.isFunction widget[command]
         return widget[command].apply widget, a
       else
         $.error "Command [#{command}] does not exist on jQuery.ultimateFlash()"
     else
-      options = if argsLength then arguments[0] else {}
-      widget = new UltimateFlashWidget jContainer, options
-      jContainer.data UltimateFlashWidget.defaults.constants.widgetDataKey, widget
+      options = if argsLength then a[0] else {}
+      if $.isPlainObject options
+        widget = new UltimateFlashWidget jContainer, options
+        jContainer.data UltimateFlashWidget.defaults.constants.widgetDataKey, widget
+      else
+        $.error "First argument of jQuery.ultimateFlash() must be plain object"
     if _returnWidget then widget else jContainer
 
 )( jQuery )
