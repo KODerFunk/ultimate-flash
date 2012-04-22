@@ -1,5 +1,5 @@
 ###
- * Ultimate Flash 0.4.7.alpha - Ruby on Rails oriented jQuery plugin
+ * Ultimate Flash 0.5.0 - Ruby on Rails oriented jQuery plugin based on Ultimate Widget System
  *
  * Copyright 2011-2012 Karpunin Dmitry (KODer) / Evrone.com
  *
@@ -9,15 +9,39 @@
  *
 ###
 
-# TODO architecture of wiggets in ultimate/widgets.js.coffee
 # TODO customizable show() and hide()
 # TODO improve English
 
-class UltimateFlashWidget
+###
+ * Invoke Ultimate Flash functionality for the first element in the set of matched elements.
+ * If last argument {Boolean} true, then returns {Widget}.
+ * @usage
+ *** standart actions ***
+ * construction    .ultimateFlash([Object options = {}])                  ~ {jQuery} jContainer
+ * show            .ultimateFlash('show', String type, String text)       ~ {jQuery} jFlash | {Boolean} false
+ * notice          .ultimateFlash('notice', String text)                  ~ {jQuery} jFlash | {Boolean} false
+ * alert           .ultimateFlash('alert', String text)                   ~ {jQuery} jFlash | {Boolean} false
+ *** extended actions ***
+ * getSettings     .ultimateFlash('getSettings')                          ~ {Object} settings
+ * setSettings     .ultimateFlash('setSettings', {Object} settings)       ~ {jQuery} jContainer
+ * updateSettings  .ultimateFlash({Object} options)                       ~ {Object} settings
+ * auto            .ultimateFlash('auto', {ArrayOrObject} obj)            ~ {Array} ajFlashes | {Boolean} false
+ * ajaxSuccess     .ultimateFlash('ajaxSuccess'[, Arguments successArgs = []])
+ * ajaxError       .ultimateFlash('ajaxError'[, String text = settings.translations.defaultErrorText][, Arguments errorArgs = []])
+###
 
-  @defaults =
-    constants:
-      widgetDataKey: 'ultimate_flash'
+
+
+$ ->
+  Ultimate.createPlugin Ultimate.Plugins.Flash, 'ultimateFlash'
+
+
+
+class Ultimate.Plugins.Flash extends Ultimate.Proto.Widget
+
+  @selector: '.l-page__flashes'
+
+  @defaults:
     locales:
      'en':
        defaultErrorText: 'Error'
@@ -28,6 +52,8 @@ class UltimateFlashWidget
        defaultThrownError: 'ошибка соединения с сервером'
        formFieldsError: 'Форма заполнена с ошибками'
     options:
+      locale: 'en'
+      translations: {}
       slideTime: 200
       showTime: 3600
       showTimePerChar: 30
@@ -41,34 +67,12 @@ class UltimateFlashWidget
       forceRemoveDotsAfterLastWord: false
       regExpLastWordWithoutDot: /[\wа-яёА-ЯЁ]{3,}$/
       regExpLastWordWithDot: /([\wа-яёА-ЯЁ]{3,})\.$/
-      locale: 'en'
-      translations: {}
 
-  jContainer: null
-  settings: {}
+  @events:
+    'click   .flash:not(:animated)' : 'closeFlashClick'
 
   constructor: (@jContainer, options = {}) ->
-    # if global compatible I18n
-    if I18n? and I18n.locale and I18n.t
-      # can set locale
-      options['locale'] ||= I18n.locale
-      # try read localized strings
-      if _localesFromI18n = I18n.t 'ultimate_flash'
-        # pointing to default UF locales of language specified in I18n
-        _defaultLocales = @constructor.defaults.locales[I18n.locale]
-        # fill it from I18n
-        for key, value of _localesFromI18n
-          _defaultLocales[_.camelize key] = value
-    _locale = options['locale'] or @constructor.defaults.options['locale']
-    $.error "Locale [#{_locale}] not exists in UltimateFlash default locales."  unless @constructor.defaults.locales[_locale]
-    @settings = $.extend true, {}, @constructor.defaults.options, translations: @constructor.defaults.locales[_locale], options
-    @jContainer.data @constructor.defaults.constants.widgetDataKey, @
-    _self = @
-    # delegate event for hide on click
-    @jContainer.on 'click.ultimate_flash_close', '.flash:not(:animated)', (event) =>
-      if @settings.hideOnClick
-        @_hide $ event.currentTarget
-        false
+    super
     # init flashes from server
     @jFlashes().each (index, flash) =>
       jFlash = $ flash
@@ -80,6 +84,12 @@ class UltimateFlashWidget
     # binding hook ajaxSuccess handler
     @jContainer.ajaxSuccess =>
       @ajaxSuccess arguments  if @settings.showAjaxSuccesses
+
+  # delegate event for hide on click
+  closeFlashClick: (event) =>
+    if @settings.hideOnClick
+      @_hide $ event.currentTarget
+      false
 
   jFlashes: (filterSelector) ->
     _jFlashes = @jContainer.find '.flash'
@@ -103,16 +113,6 @@ class UltimateFlashWidget
           jFlash.removeData 'timeoutId'
           @_hide jFlash
         , timeout
-
-  getSettings: ->
-    @settings
-
-  setSettings: (settings) ->
-    @settings = settings
-
-  updateSettings: (options) ->
-    $.extend @settings, (if options['locale'] then @constructor.defaults.locales[options['locale']] else {}), options
-    @settings
 
   show: (type, text) ->
     return false  if $.isEmptyString text
@@ -181,6 +181,8 @@ class UltimateFlashWidget
       errorArgs = args errorArgs
       errorArgs.shift()  if errorArgs[0].target # remove event
       [jqXHR, ajaxSettings, thrownError] = errorArgs
+      # prevent undefined responses
+      return false  if jqXHR.status < 100
       # prevent recall
       return false  if jqXHR.breakFlash
       jqXHR.breakFlash = true
@@ -221,62 +223,3 @@ class UltimateFlashWidget
       text += ': '  if text
       text += "#{thrownError} [#{jqXHR.status}]"
     return @alert text
-
-
-
-( ($) ->
-
-  ###
-   * Invoke Ultimate Flash functionality for the first element in the set of matched elements.
-   * If last argument {Boolean} true, then returns {Widget}.
-   * @usage
-   *** standart actions ***
-   * construction    .ultimateFlash([Object options = {}])                  ~ {jQuery} jContainer
-   * show            .ultimateFlash('show', String type, String text)       ~ {jQuery} jFlash | {Boolean} false
-   * notice          .ultimateFlash('notice', String text)                  ~ {jQuery} jFlash | {Boolean} false
-   * alert           .ultimateFlash('alert', String text)                   ~ {jQuery} jFlash | {Boolean} false
-   *** extended actions ***
-   * getSettings     .ultimateFlash('getSettings')                          ~ {Object} settings
-   * setSettings     .ultimateFlash('setSettings', {Object} settings)       ~ {jQuery} jContainer
-   * updateSettings  .ultimateFlash({Object} options)                       ~ {Object} settings
-   * auto            .ultimateFlash('auto', {ArrayOrObject} obj)            ~ {Array} ajFlashes | {Boolean} false
-   * ajaxSuccess     .ultimateFlash('ajaxSuccess'[, Arguments successArgs = []])
-   * ajaxError       .ultimateFlash('ajaxError'[, String text = settings.translations.defaultErrorText][, Arguments errorArgs = []])
-  ###
-  $.fn.ultimateFlash = ->
-    a = args arguments
-    argsLength = a.length
-    # Shall return the Widget, if have arguments and last argument of the call is a Boolean true.
-    _returnWidget =
-      if argsLength and _.isBoolean a[argsLength - 1]
-        argsLength--
-        a.pop()
-      else
-        false
-    unless @length
-      return if _returnWidget then undefined else @
-    # Get the first
-    jContainer = @eq 0
-    # Try to get the Widget-object, controlling everything that happens in our magical container.
-    widget = jContainer.data UltimateFlashWidget.defaults.constants.widgetDataKey
-    if widget and widget.jContainer[0] is jContainer[0]
-      if argsLength and _.isString a[0]
-        command = a.shift()
-      else
-        return widget  if _returnWidget
-        return jContainer  unless argsLength
-        command = 'updateSettings'
-      if _.isFunction widget[command]
-        return widget[command].apply widget, a
-      else
-        $.error "Command [#{command}] does not exist on jQuery.ultimateFlash()"
-    else
-      options = if argsLength then a[0] else {}
-      if $.isPlainObject options
-        widget = new UltimateFlashWidget jContainer, options
-        jContainer.data UltimateFlashWidget.defaults.constants.widgetDataKey, widget
-      else
-        $.error "First argument of jQuery.ultimateFlash() must be plain object"
-    if _returnWidget then widget else jContainer
-
-)( jQuery )
