@@ -11,6 +11,8 @@
 
 # TODO customizable show() and hide()
 # TODO improve English
+# TODO settings by call
+# TODO jGrowl features
 
 ###
  * Invoke Ultimate Flash functionality for the first element in the set of matched elements.
@@ -38,6 +40,7 @@ $ ->
 
 
 class Ultimate.Plugins.Flash extends Ultimate.Proto.Widget
+  @className: 'Flash'
 
   @selector: '.l-page__flashes'
 
@@ -209,16 +212,16 @@ class Ultimate.Plugins.Flash extends Ultimate.Proto.Widget
       if jqXHR.status >= 400 and jqXHR.responseText
         # try detect Rails raise message
         if raiseMatches = jqXHR.responseText.match /<\/h1>\n<pre>(.+?)<\/pre>/
-          cout "replace thrownError = '#{thrownError}' with raiseMatches[1] = '#{raiseMatches[1]}'"
+          @debug "replace thrownError = '#{thrownError}' with raiseMatches[1] = '#{raiseMatches[1]}'"
           thrownError = raiseMatches[1]
         else
           # try detect short text message as error
           if jqXHR.responseText.length <= @settings.detectPlainTextMaxLength
-            cout "replace thrownError = '#{thrownError}' with jqXHR.responseText = '#{jqXHR.responseText}'"
+            @debug "replace thrownError = '#{thrownError}' with jqXHR.responseText = '#{jqXHR.responseText}'"
             thrownError = jqXHR.responseText
       else
         if _.isString thrownError and not $.isEmptyString thrownError
-          cout "replace thrownError = '#{thrownError}' with @settings.translations.defaultThrownError = '#{@settings.translations.defaultThrownError}'"
+          @debug "replace thrownError = '#{thrownError}' with @settings.translations.defaultThrownError = '#{@settings.translations.defaultThrownError}'"
           thrownError = @settings.translations.defaultThrownError
       text += ': '  if text
       text += "#{thrownError} [#{jqXHR.status}]"
