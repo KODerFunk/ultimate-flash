@@ -1,0 +1,54 @@
+@mixin ultimate-flash(
+  $notice-background:     #393,
+  $notice-border-color:   #6c6,
+  $alert-background:      #c33,
+  $alert-border-color:    #e66,
+  $default-background:    #06c,
+  $default-border-color:  #39e,
+  $text-color:            #fff,
+  $opacity:               1,
+  $background-alpha:      1
+){
+  position:   fixed;
+  width:      100%;
+  left:       0;
+  z-index:    9999;
+  text-align: center;
+// >>> recomendations:
+// @include invert_link_decoration();
+// white-space: nowrap;
+
+  > .flash {
+    @if $background-alpha < 1 {
+      $notice-background:   rgba($notice-background,  $background-alpha);
+      $alert-background:    rgba($alert-background,   $background-alpha);
+      $default-background:  rgba($default-background, $background-alpha);
+    }
+    padding:       10px;
+    top:           0;
+    width:         100%;
+    font-size:     24px;
+    line-height:   30px;
+    color:         $text-color;
+    @include pie-bg($default-background);
+    border-bottom: 2px solid $default-border-color;
+    @if $opacity < 1 {
+      @include opacity($opacity);
+    }
+    // >>> recomendations:
+    // @include text-shadow_hard(#000 0 1px 0);
+    z-index:       9999;
+    a {
+      color: $text-color;
+    }
+    &.notice {
+      @include pie-bg($notice-background);
+      border-color: $notice-border-color;
+    }
+    &.alert {
+      @include pie-bg($alert-background);
+      border-color: $alert-border-color;
+    }
+  }
+
+}
