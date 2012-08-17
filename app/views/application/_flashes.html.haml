@@ -1,4 +1,3 @@
-%section.l-page__flashes.from_app
+%section.l-page__flashes
   - flash.each do |key, text|
-    .flash{:class => key}
-      = text
+    .flash{class: key}= text

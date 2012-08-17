@@ -13,8 +13,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "ultimate-flash"
 
-  s.add_dependency "coffee-script", "~> 2.2.0"
-  s.add_dependency "ultimate-base", "~> 0.1.6.alpha"
+  s.add_dependency "ultimate-base", "~> 0.2"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
