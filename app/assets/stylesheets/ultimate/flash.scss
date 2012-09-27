@@ -1,3 +1,12 @@
+//  Usage:
+//    .l-page__flashes {
+//      @include ultimate-flash($background-alpha: 0.7);
+//      @include font_custom;
+//      > .flash {
+//        &.custom-type { }
+//      }
+//    }
+
 @mixin ultimate-flash(
   $notice-background:     #393,
   $notice-border-color:   #6c6,

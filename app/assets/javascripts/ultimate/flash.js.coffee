@@ -1,5 +1,5 @@
 ###*
- * Ultimate Flash 0.6.0 - Ruby on Rails oriented jQuery plugin based on Ultimate Backbone
+ * Ultimate Flash 0.6.1 - Ruby on Rails oriented jQuery plugin
  *
  * Copyright 2011-2012 Karpunin Dmitry (KODer) / Evrone.com
  *
@@ -32,12 +32,12 @@
 # TODO improve English
 # TODO jGrowl features
 
-#= require ultimate/backbone/view
-#= require ultimate/backbone/extra/jquery-plugin-adapter
+#= require ultimate/jquery-plugin-class
+#= require ultimate/jquery-plugin-adapter
 
-Ultimate.Backbone.Plugins ||= {}
+Ultimate.Plugins ||= {}
 
-class Ultimate.Backbone.Plugins.Flash extends Ultimate.Backbone.View
+class Ultimate.Plugins.Flash extends Ultimate.Plugin
 
   el: ".l-page__flashes"
 
@@ -79,13 +79,13 @@ class Ultimate.Backbone.Plugins.Flash extends Ultimate.Backbone.View
     @$el.ajaxError =>
       if @showAjaxErrors
         a = @_ajaxSuccessParseArguments(arguments)
-        Ultimate.Backbone.debug ".Plugins.Flash.ajaxError", a
+        Ultimate.debug(".Plugins.Flash.ajaxError", a)  if _.isFunction(Ultimate.debug)
         @ajaxError a.data, a.jqXHR
     # binding hook ajaxSuccess handler
     @$el.ajaxSuccess =>
       if @showAjaxSuccesses
         a = @_ajaxSuccessParseArguments(arguments)
-        Ultimate.Backbone.debug ".Plugins.Flash.ajaxSuccess", a
+        Ultimate.debug(".Plugins.Flash.ajaxSuccess", a)  if _.isFunction(Ultimate.debug)
         @ajaxSuccess a.data, a.jqXHR
 
   # delegate event for hide on click
@@ -143,7 +143,7 @@ class Ultimate.Backbone.Plugins.Flash extends Ultimate.Backbone.View
     # detect event as first element
     if successArgs[0] instanceof jQuery.Event
       # convert arguments to Array
-      successArgs = args(successArgs)
+      successArgs = _.toArray(successArgs)
       # remove event
       successArgs.shift()
     # arrange arguments
@@ -215,16 +215,16 @@ class Ultimate.Backbone.Plugins.Flash extends Ultimate.Backbone.View
     if jqXHR.status >= 400 and jqXHR.responseText
       # try detect Rails raise message
       if raiseMatches = jqXHR.responseText.match(/<\/h1>\n<pre>(.+?)<\/pre>/)
-        Ultimate.Backbone.debug "replace thrownError = \"#{thrownError}\" with raiseMatches[1] = \"#{raiseMatches[1]}\""
+        Ultimate.debug("replace thrownError = \"#{thrownError}\" with raiseMatches[1] = \"#{raiseMatches[1]}\"")  if _.isFunction(Ultimate.debug)
         thrownError = raiseMatches[1]
       else
         # try detect short text message as error
         if jqXHR.responseText.length <= @detectPlainTextMaxLength
-          Ultimate.Backbone.debug "replace thrownError = \"#{thrownError}\" with jqXHR.responseText = \"#{jqXHR.responseText}\""
+          Ultimate.debug("replace thrownError = \"#{thrownError}\" with jqXHR.responseText = \"#{jqXHR.responseText}\"")  if _.isFunction(Ultimate.debug)
           thrownError = jqXHR.responseText
     else
       if _.isString(thrownError) and not _.isBlank(thrownError)
-        Ultimate.Backbone.debug "replace thrownError = \"#{thrownError}\" with @translations.defaultThrownError = \"#{@translations.defaultThrownError}\""
+        Ultimate.debug("replace thrownError = \"#{thrownError}\" with @translations.defaultThrownError = \"#{@translations.defaultThrownError}\"")  if _.isFunction(Ultimate.debug)
         thrownError = @translations.defaultThrownError
     text += ": "  if text
     text += "#{thrownError} [#{jqXHR.status}]"
@@ -232,4 +232,4 @@ class Ultimate.Backbone.Plugins.Flash extends Ultimate.Backbone.View
 
 
 
-Ultimate.Backbone.createJQueryPlugin "ultimateFlash", Ultimate.Backbone.Plugins.Flash
+Ultimate.createJQueryPlugin "ultimateFlash", Ultimate.Plugins.Flash
