@@ -1,13 +1,13 @@
 PATH
   remote: .
   specs:
-    ultimate-flash (0.6.1)
-      ultimate-base (~> 0.2)
+    ultimate-flash (0.6.1.1)
+      ultimate-base (~> 0.3.1)
 
 GEM
   remote: http://rubygems.org/
   specs:
-    ultimate-base (0.3.1)
+    ultimate-base (0.3.1.1)
 
 PLATFORMS
   ruby
