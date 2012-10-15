@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "ultimate-flash"
 
-  s.add_dependency "ultimate-base", "~> 0.3.1"
+  s.add_dependency "ultimate-base", "~> 0.3.2"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")

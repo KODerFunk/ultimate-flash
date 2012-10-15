@@ -7,6 +7,16 @@ Ruby on Rails oriented jQuery plugin for smart notifications
 window.flash = $(".l-page__flashes").ultimateFlash({locale: "ru"}, true);
 ```
 
+**Usage**:
+
+```javascript
+$(".l-page__flashes").ultimateFlash('notice', 'Hello.');
+```
+or
+```javascript
+flash.notice('Hello.');
+```
+
 ## Licence ##
 
 The MIT License
