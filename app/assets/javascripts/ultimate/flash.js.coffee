@@ -1,5 +1,5 @@
 ###*
- * Ultimate Flash 0.7.0 - Ruby on Rails oriented jQuery plugin for smart notifications
+ * Ultimate Flash 0.7.1 - Ruby on Rails oriented jQuery plugin for smart notifications
  * Copyright 2011-2012 Karpunin Dmitry (KODer) / Evrone.com
  * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
  *
@@ -228,7 +228,7 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
           thrownError = raiseMatches[1]
         else
           # try detect short text message as error
-          if jqXHR.responseText.length <= @detectPlainTextMaxLength
+          if not _.string.isBlank(jqXHR.responseText) and jqXHR.responseText.length <= @detectPlainTextMaxLength
             thrownError = jqXHR.responseText
       else if _.string.isBlank(thrownError)
         thrownError = @t('defaultThrownError')
