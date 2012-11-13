@@ -195,7 +195,7 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
       thrownError = text
       text = @t('defaultErrorText')
     # prevent undefined responses
-    #return false  if jqXHR.status < 100
+    return false  if jqXHR.status < 100
     # prevent recall
     return false  if jqXHR.breakFlash
     jqXHR.breakFlash = true
