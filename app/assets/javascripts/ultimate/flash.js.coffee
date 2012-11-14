@@ -49,6 +49,7 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
   flashClass: 'flash'                   # css-class of message container
   showAjaxErrors: true                  # catch global jQuery.ajaxErrors(), try detect message and show it
   showAjaxSuccesses: true               # catch global jQuery.ajaxSuccessess(), try detect message and show it
+  preventUndefinedResponses: true       # prevent error responses with status code < 100, often 0
   detectFormErrors: true                # can be function (parsedJSON)
   detectPlainTextMaxLength: 200         # if response has plain text and its length fits, show it
   productionMode: true
@@ -195,7 +196,7 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
       thrownError = text
       text = @t('defaultErrorText')
     # prevent undefined responses
-    return false  if @productionMode and jqXHR.status < 100
+    return false  if @preventUndefinedResponses and jqXHR.status < 100
     # prevent recall
     return false  if jqXHR.breakFlash
     jqXHR.breakFlash = true
