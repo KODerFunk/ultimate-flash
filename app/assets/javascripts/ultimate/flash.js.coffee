@@ -51,7 +51,7 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
   showAjaxSuccesses: true               # catch global jQuery.ajaxSuccessess(), try detect message and show it
   preventUndefinedResponses: true       # prevent error responses with status code < 100, often 0
   detectFormErrors: true                # can be function (parsedJSON)
-  detectPlainTextMaxLength: 200         # if response has plain text and its length fits, show it
+  detectPlainTextMaxLength: 200         # if response has plain text and its length fits, show it (-1 for disable)
   productionMode: true
 
   slideTime: 200                        # show and hide animate duration
