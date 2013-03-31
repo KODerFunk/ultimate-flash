@@ -1,5 +1,5 @@
-require "ultimate-flash/version"
-require "ultimate-flash/engine"
+require 'ultimate-flash/version'
+require 'ultimate-flash/engine'
 
 module Ultimate
   module Flash
