@@ -1,6 +1,6 @@
 ###*
- * Ultimate Flash 0.7.1 - Ruby on Rails oriented jQuery plugin for smart notifications
- * Copyright 2011-2012 Karpunin Dmitry (KODer) / Evrone.com
+ * Ultimate Flash 0.8.2 - Ruby on Rails oriented jQuery plugin for smart notifications
+ * Copyright 2011-2013 Karpunin Dmitry (KODer) / Evrone.com
  * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
  *
 ###
@@ -54,6 +54,7 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
   detectPlainTextMaxLength: 200         # if response has plain text and its length fits, show it (-1 for disable)
   productionMode: true
 
+  maxFlashes: 0                         # maximum flash messages in one time
   slideTime: 200                        # show and hide animate duration
   showTime: 3600                        # base time for show flash message
   showTimePerChar: 30                   # show time per char of flash message
@@ -123,14 +124,22 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
     jFlashes.each (index, element) =>
       jFlash = $(element)
       clearTimeout jFlash.data('timeoutId')
-      jFlash.slideUp @_getOptionOverFlash('slideTime', jFlash), =>
+      jFlash.addClass('hide').slideUp @_getOptionOverFlash('slideTime', jFlash), =>
         jFlash.remove()  if @_getOptionOverFlash('removeOnHide', jFlash)
+
+  _append: (jFlash) ->
+    jFlash.appendTo @$el
 
   show: (type, text, timeout = null, perFlashOptions = null) ->
     text = @_prepareText(text, perFlashOptions)
     return false  if not _.isString(text) or _.string.isBlank(text)
+    if @maxFlashes
+      jActiveFlashes = @jFlashes(':not(.hide)')
+      excessFlashes = jActiveFlashes.length - (@maxFlashes - 1)
+      if excessFlashes > 0
+        @hide jActiveFlashes.slice(0, excessFlashes)
     jFlash = $("<div class=\"#{@flashClass} #{type}\" style=\"display: none;\">#{text}</div>")
-    jFlash.appendTo(@$el).slideDown @_getOptionOverFlash('slideTime', perFlashOptions)
+    @_append(jFlash).slideDown @_getOptionOverFlash('slideTime', perFlashOptions)
     if perFlashOptions
       jFlash.data(key, value)  for key, value of perFlashOptions
     @_setTimeout jFlash, timeout
