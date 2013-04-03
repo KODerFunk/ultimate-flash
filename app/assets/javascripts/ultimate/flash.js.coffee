@@ -76,13 +76,14 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
       jFlash = $(flash)
       jFlash.html @_prepareText(jFlash.html(), jFlash)
       @_setTimeout jFlash
+    jDocument = $(document)
     # binding hook ajaxError handler
-    @$el.ajaxError =>
+    jDocument.ajaxError =>
       if @showAjaxErrors
         a = @_ajaxParseArguments(arguments)
         @ajaxError a.data, a.jqXHR
     # binding hook ajaxSuccess handler
-    @$el.ajaxSuccess =>
+    jDocument.ajaxSuccess =>
       if @showAjaxSuccesses
         a = @_ajaxParseArguments(arguments)
         @ajaxSuccess a.data, a.jqXHR
