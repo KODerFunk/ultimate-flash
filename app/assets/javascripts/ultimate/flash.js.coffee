@@ -121,15 +121,21 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
         @hide jFlash
       , timeout
 
+  _hide: (jFlash, slideTime) ->
+    jFlash.slideUp slideTime, =>
+      jFlash.remove()  if @_getOptionOverFlash('removeOnHide', jFlash)
+
   hide: (jFlashes = @jFlashes()) ->
     jFlashes.each (index, element) =>
       jFlash = $(element)
       clearTimeout jFlash.data('timeoutId')
-      jFlash.addClass('hide').slideUp @_getOptionOverFlash('slideTime', jFlash), =>
-        jFlash.remove()  if @_getOptionOverFlash('removeOnHide', jFlash)
+      @_hide jFlash.addClass('hide'), @_getOptionOverFlash('slideTime', jFlash)
 
   _append: (jFlash) ->
     jFlash.appendTo @$el
+
+  _show: (jFlash, slideTime) ->
+    jFlash.slideDown slideTime
 
   show: (type, text, timeout = null, perFlashOptions = null) ->
     text = @_prepareText(text, perFlashOptions)
@@ -140,9 +146,9 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
       if excessFlashes > 0
         @hide jActiveFlashes.slice(0, excessFlashes)
     jFlash = $("<div class=\"#{@flashClass} #{type}\" style=\"display: none;\">#{text}</div>")
-    @_append(jFlash).slideDown @_getOptionOverFlash('slideTime', perFlashOptions)
     if perFlashOptions
       jFlash.data(key, value)  for key, value of perFlashOptions
+    @_show @_append(jFlash), @_getOptionOverFlash('slideTime', perFlashOptions)
     @_setTimeout jFlash, timeout
     jFlash
 
