@@ -1,11 +1,13 @@
 ###*
- * Ultimate Flash 0.8.3 - Ruby on Rails oriented jQuery plugin for smart notifications
+ * Ultimate Flash 0.9.0 - Ruby on Rails oriented jQuery plugin for smart notifications
  * Copyright 2011-2013 Karpunin Dmitry (KODer) / Evrone.com
  * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
  *
 ###
 
 ###*
+ * * * DEPRECATED syntax!
+ *
  * $.fn.ultimateFlash() invoke Ultimate Flash functionality at first call on jQuery object
  * for the first element in the set of matched elements.
  * Subsequent calls forwarding on view methods or return view property.
@@ -22,29 +24,25 @@
  *     auto            .ultimateFlash('auto', {ArrayOrObject} obj)            : {Array} ajFlashes | {Boolean} false
  *     ajaxSuccess     .ultimateFlash('ajaxSuccess'[, Arguments successArgs = []])
  *     ajaxError       .ultimateFlash('ajaxError'[, String text = translations.defaultErrorText][, Arguments errorArgs = []])
+ *
+ * * * USE INSTEAD
+ * @usage
+ *   window.flash = new Ultimate.Plugin.Flash[(Object options = {})]
+ *   flash.notice String text
 ###
 
 # TODO improve English
 # TODO jGrowl features
 
-#= require ultimate/jquery-plugin-class
 #= require ultimate/jquery-plugin-adapter
 
 Ultimate.Plugins ||= {}
 
-class Ultimate.Plugins.Flash extends Ultimate.Plugin
+Ultimate.__FlashClass ||= Ultimate.Plugin
+
+class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
 
   el: '.l-page__flashes'
-
-  @defaultLocales =
-    en:
-      defaultErrorText: 'Error'
-      defaultThrownError: 'server connection error'
-      formFieldsError: 'Form filled with errors'
-    ru:
-      defaultErrorText: 'Ошибка'
-      defaultThrownError: 'ошибка соединения с сервером'
-      formFieldsError: 'Форма заполнена с ошибками'
 
   flashClass: 'flash'                   # css-class of message container
   showAjaxErrors: true                  # catch global jQuery.ajaxErrors(), try detect message and show it
@@ -88,12 +86,42 @@ class Ultimate.Plugins.Flash extends Ultimate.Plugin
         a = @_ajaxParseArguments(arguments)
         @ajaxSuccess a.data, a.jqXHR
 
+
+  _configure: (options) ->
+    super
+    @_initTranslations()
+
+  locale: 'en'
+  translations: null
+
+  @defaultLocales =
+    en:
+      defaultErrorText: 'Error'
+      defaultThrownError: 'server connection error'
+      formFieldsError: 'Form filled with errors'
+    ru:
+      defaultErrorText: 'Ошибка'
+      defaultThrownError: 'ошибка соединения с сервером'
+      formFieldsError: 'Форма заполнена с ошибками'
+
+  # use I18n, and modify locale and translations
+  _initTranslations: ->
+    @translations ||= {}
+    if not @options['locale'] and I18n?.locale of @constructor.defaultLocales
+      @locale = I18n.locale
+    _.defaults @translations, @constructor.defaultLocales[@locale]
+
+  t: (key) ->
+    @translations[key] or _.string.humanize(key)
+
   # delegate event for hide on click
   closeFlashClick: (event) ->
     jFlash = $(event.currentTarget)
     if @_getOptionOverFlash('hideOnClick', jFlash)
       @hide jFlash
       false
+
+
 
   jFlashes: (filterSelector) ->
     _jFlashes = @$(".#{@flashClass}")
