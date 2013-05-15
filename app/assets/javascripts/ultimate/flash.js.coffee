@@ -1,5 +1,5 @@
 ###*
- * Ultimate Flash 0.8.2 - Ruby on Rails oriented jQuery plugin for smart notifications
+ * Ultimate Flash 0.8.3 - Ruby on Rails oriented jQuery plugin for smart notifications
  * Copyright 2011-2013 Karpunin Dmitry (KODer) / Evrone.com
  * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
  *
