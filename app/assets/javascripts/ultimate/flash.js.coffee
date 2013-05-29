@@ -27,7 +27,7 @@
  *
  * * * USE INSTEAD
  * @usage
- *   window.flash = new Ultimate.Plugin.Flash[(Object options = {})]
+ *   window.flash = new Ultimate.Plugins.Flash[(Object options = {})]
  *   flash.notice String text
 ###
 
@@ -253,7 +253,8 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
           # catch 'error' object and call alert() method
           return @alert(parsedJSON['error'])  if parsedJSON['error']
           # may be parsedJSON is form errors
-          if @detectFormErrors is true
+          # about 404: https://github.com/bcardarella/client_side_validations/issues/297
+          if @detectFormErrors is true and jqXHR.status isnt 404
             # show message about form with errors
             return @alert(@t('formFieldsError'))
           else if _.isFunction(@detectFormErrors)
