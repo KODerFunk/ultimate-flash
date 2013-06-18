@@ -1,4 +1,4 @@
-//  NOTE: This style require usage of https://github.com/evrone/ultimate-mixins
+//  NOTE: This style require usage of https://github.com/evrone/ultimate-mixins or Piebone
 //
 //  Usage:
 //    .l-page__flashes {
@@ -42,7 +42,7 @@
     font-size:     24px;
     line-height:   30px;
     color:         $text-color;
-    @include box-sizing;
+    @include box-sizing(border-box);
     @include pie-bg($default-background);
     border-bottom: 2px solid $default-border-color;
     @if $opacity < 1 {

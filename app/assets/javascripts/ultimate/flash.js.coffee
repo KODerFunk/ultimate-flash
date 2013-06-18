@@ -1,5 +1,5 @@
 ###*
- * Ultimate Flash 0.9.0 - Ruby on Rails oriented jQuery plugin for smart notifications
+ * Ultimate Flash 0.9.1 - Ruby on Rails oriented jQuery plugin for smart notifications
  * Copyright 2011-2013 Karpunin Dmitry (KODer) / Evrone.com
  * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
  *
@@ -159,6 +159,9 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
       clearTimeout jFlash.data('timeoutId')
       @_hide jFlash.addClass('hide'), @_getOptionOverFlash('slideTime', jFlash)
 
+  _template: (type, text) ->
+    "<div class=\"#{@flashClass} #{type}\" style=\"display: none;\">#{text}</div>"
+
   _append: (jFlash) ->
     jFlash.appendTo @$el
 
@@ -173,7 +176,7 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
       excessFlashes = jActiveFlashes.length - (@maxFlashes - 1)
       if excessFlashes > 0
         @hide jActiveFlashes.slice(0, excessFlashes)
-    jFlash = $("<div class=\"#{@flashClass} #{type}\" style=\"display: none;\">#{text}</div>")
+    jFlash = $(@_template(type, text))
     if perFlashOptions
       jFlash.data(key, value)  for key, value of perFlashOptions
     @_show @_append(jFlash), @_getOptionOverFlash('slideTime', perFlashOptions)
