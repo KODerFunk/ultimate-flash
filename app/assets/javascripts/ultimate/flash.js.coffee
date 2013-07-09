@@ -1,5 +1,5 @@
 ###*
- * Ultimate Flash 0.9.1 - Ruby on Rails oriented jQuery plugin for smart notifications
+ * Ultimate Flash 0.9.2 - Ruby on Rails oriented jQuery plugin for smart notifications
  * Copyright 2011-2013 Karpunin Dmitry (KODer) / Evrone.com
  * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
  *
@@ -250,28 +250,30 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
     if jqXHR.responseText
       try
         # try parse respose as json
-        if parsedJSON = $.parseJSON(jqXHR.responseText)
+        parsedJSON = $.parseJSON(jqXHR.responseText)
+        if _.isObject(parsedJSON) and not _.isEmpty(parsedJSON)
           # catch 'flash' object and call auto() method with autodetecting flash-notice type
           return @auto(parsedJSON['flash'])  if parsedJSON['flash']
           # catch 'error' object and call alert() method
           return @alert(parsedJSON['error'])  if parsedJSON['error']
           # may be parsedJSON is form errors
-          # about 404: https://github.com/bcardarella/client_side_validations/issues/297
-          if @detectFormErrors is true and jqXHR.status isnt 404
+          if @detectFormErrors is true
             # show message about form with errors
             return @alert(@t('formFieldsError'))
-          else if _.isFunction(@detectFormErrors)
-            # using showFormError as callback
-            return @detectFormErrors.apply(@, [parsedJSON])
+          else if _.isFunction(@detectFormErrors) and (detectedError = @detectFormErrors(parsedJSON))
+            # using detectFormErrors as callback
+            return @alert(detectedError)
           else
             # nothing
             return false
       catch e
         # nop
+    # about 404: https://github.com/bcardarella/client_side_validations/issues/297
+    return false  if jqXHR.status < 400 or jqXHR.status is 404
     if @productionMode
       thrownError = @t('defaultThrownError')
     else
-      if jqXHR.status >= 400 and jqXHR.responseText
+      if jqXHR.responseText
         # try detect Rails raise message
         if raiseMatches = jqXHR.responseText.match(/<\/h1>\n<pre>(.+?)<\/pre>/)
           thrownError = raiseMatches[1]
