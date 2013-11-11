@@ -56,8 +56,9 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
   slideTime: 200                        # show and hide animate duration
   showTime: 3600                        # base time for show flash message
   showTimePerChar: 30                   # show time per char of flash message
+  hiddenClass: 'hidden-flash'           # class to add for hidden flashes
   hideOnClick: true                     # click on notice fire hide()
-  removeOnHide: true                    # remove notice DOM-element on hide
+  removeAfterHide: true                 # remove notice DOM-element on hide
   forceAddDotsAfterLastWord: false
   forceRemoveDotsAfterLastWord: false
   regExpLastWordWithoutDot: /[\wа-яёА-ЯЁ]{3,}$/
@@ -151,13 +152,13 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
 
   _hide: (jFlash, slideTime) ->
     jFlash.slideUp slideTime, =>
-      jFlash.remove()  if @_getOptionOverFlash('removeOnHide', jFlash)
+      jFlash.remove()  if @_getOptionOverFlash('removeAfterHide', jFlash)
 
   hide: (jFlashes = @jFlashes()) ->
     jFlashes.each (index, element) =>
       jFlash = $(element)
       clearTimeout jFlash.data('timeoutId')
-      @_hide jFlash.addClass('hide'), @_getOptionOverFlash('slideTime', jFlash)
+      @_hide jFlash.addClass(@hiddenClass), @_getOptionOverFlash('slideTime', jFlash)
 
   _template: (type, text) ->
     "<div class=\"#{@flashClass} #{type}\" style=\"display: none;\">#{text}</div>"
@@ -172,7 +173,7 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
     text = @_prepareText(text, perFlashOptions)
     return false  if not _.isString(text) or _.string.isBlank(text)
     if @maxFlashes
-      jActiveFlashes = @jFlashes(':not(.hide)')
+      jActiveFlashes = @jFlashes(":not(.#{@hiddenClass})")
       excessFlashes = jActiveFlashes.length - (@maxFlashes - 1)
       if excessFlashes > 0
         @hide jActiveFlashes.slice(0, excessFlashes)

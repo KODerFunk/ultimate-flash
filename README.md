@@ -1,10 +1,18 @@
 Ruby on Rails oriented jQuery plugin for smart notifications
 
+You need Ultimate.Backbone.View (improved Backbone.View) or compatible class for inheritance (e.g. Ultimate.Plugin).
+All this stuff can be viewed here https://github.com/KODerFunk/ultimate-base until I come up with a more pure product.
+
 **Binding**:
 
 ```javascript
 //= require ultimate/flash
 window.flash = $(".l-page__flashes").ultimateFlash({locale: "ru"}, true);
+```
+
+Ultimate.Plugin used as prototype by default. For change to another prototype you can type this before binding:
+```coffeescript
+Ultimate.__FlashClass = Ultimate.Backbone.View
 ```
 
 **Usage**:
