@@ -70,6 +70,7 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
     _events
 
   initialize: (options) ->
+    @_initTranslations options
     # init flashes come from server in page
     @jFlashes().each (index, flash) =>
       jFlash = $(flash)
@@ -88,9 +89,6 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
         @ajaxSuccess a.data, a.jqXHR
 
 
-  _configure: (options) ->
-    super
-    @_initTranslations()
 
   locale: 'en'
   translations: null
@@ -106,9 +104,9 @@ class Ultimate.Plugins.Flash extends Ultimate.__FlashClass
       formFieldsError: 'Форма заполнена с ошибками'
 
   # use I18n, and modify locale and translations
-  _initTranslations: ->
+  _initTranslations: (options) ->
     @translations ||= {}
-    if not @options['locale'] and I18n?.locale of @constructor.defaultLocales
+    if not options['locale'] and I18n?.locale of @constructor.defaultLocales
       @locale = I18n.locale
     _.defaults @translations, @constructor.defaultLocales[@locale]
 
